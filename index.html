@@ -1,45 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather Website</title>
-    <link rel="stylesheet" href="design.css">
+  <title>Autocomplete Example</title>
+  <script src="https://cdn.jsdelivr.net/npm/algoliasearch/dist/algoliasearchLite.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Weather</h1>
-        <input type="text" />
-        <div class="Weather__Website">
-            <div class="icon_container">
-                <span>17&#176;C</span>
-                <img src="images/images.png" alt="">
-            </div>
-            <div class="description_container">
-                <p class="date">22.07.2003</p>
-                <h2>Sunny</h2>
-                <ul>
-                    <li>
-                        <span>min. temputre</span>
-                        <span>12&#176;C</span>
-                    </li>
-                    <li>
-                        <span>max. temputre</span>
-                        <span>23&#176;C</span>
-                    </li>
-                    <li>
-                        <span>feels like</span>
-                        <span>12&#176;C</span>
-                    </li>
-                </ul>
-                
-            </div>
-        </div>
-        <img src="Placeholder" alt="">
+  <div id="app">
+    <h1>Autocomplete Example</h1>
+    <input type="text" v-model="query" @input="fetchAlgoliaSuggestions" placeholder="Search">
+    <ul>
+      <li v-for="suggestion in suggestions" @click="showDetails(suggestion)">
+        {{ suggestion.name }}
+      </li>
+    </ul>
+    <div v-if="selectedSuggestion">
+      <h2>Details</h2>
+      <p>City: {{ selectedSuggestion.name }}</p>
+      <p>Country: {{ selectedSuggestion.country }}</p>
+      <p>Latitude: {{ selectedSuggestion.lat }}</p>
+      <p>Longitude: {{ selectedSuggestion.lng }}</p>
     </div>
-   <footer>
-    <h3>GhostWriters</h3>
-   </footer>
+  </div>
+
+  <script>
+    const appId = 'STZ35PR6GN';
+    const apiKey = '269a59d0b9a329365fe81ecb15c1d228';
+
+    const algolia = algoliasearch(appId, apiKey);
+    const index = algolia.initIndex('city_query_suggestions');
+
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          query: '',
+          suggestions: [],
+          selectedSuggestion: null,
+        };
+      },
+      methods: {
+        fetchAlgoliaSuggestions() {
+          if (this.query.length > 0) {
+            index
+              .search(this.query, { hitsPerPage: 5 })
+              .then(({ hits }) => {
+                this.suggestions = hits;
+              })
+              .catch(error => {
+                console.error(error);
+                this.suggestions = [];
+              });
+          } else {
+            this.suggestions = [];
+          }
+        },
+        showDetails(suggestion) {
+          this.selectedSuggestion = suggestion;
+        },
+      },
+    });
+  </script>
 </body>
 </html>
